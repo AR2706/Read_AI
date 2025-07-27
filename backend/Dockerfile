@@ -31,7 +31,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt --break-system-packages
 COPY . .
 
 # Expose the port your Node.js backend listens on
-EXPOSE 7866 # This MUST be uncommented and set to 7866
+EXPOSE 7866 
 
 # Command to run your Node.js backend server
 CMD ["node", "server.js"]
