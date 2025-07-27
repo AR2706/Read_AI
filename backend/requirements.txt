@@ -1,4 +1,7 @@
 transformers
-torch # or tensorflow, depending on what your model uses
+torch # or tensorflow, depending on your model's backend
 pdfplumber
-# Add any other Python libraries run_model.py needs
+huggingface_hub
+# If your model uses specific versions, list them:
+# transformers==4.30.0
+# torch==2.0.1
