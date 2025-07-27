@@ -1,0 +1,4 @@
+transformers
+torch # or tensorflow, depending on what your model uses
+pdfplumber
+# Add any other Python libraries run_model.py needs

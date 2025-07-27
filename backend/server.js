@@ -4,16 +4,19 @@ const multer = require("multer");
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
-const mongoose = require("mongoose");
 const cors = require("cors");
+// const mongoose = require("mongoose"); // Keep this line commented out for free tier deployment
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 8000; // Ensure this matches the exposed port in Dockerfile
 
 app.use(express.json());
 app.use(cors());
 
-// MongoDB connection
+// --- MongoDB Connection (MUST BE COMMENTED OUT for Hugging Face Spaces Free Tier) ---
+// Free tier of Hugging Face Spaces typically restricts outbound connections to external databases.
+// To enable this, you would usually need to upgrade your Space or use a different deployment strategy.
+/*
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ Connected to MongoDB Atlas"))
@@ -26,6 +29,9 @@ const feedbackSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 const Feedback = mongoose.model("Feedback", feedbackSchema);
+*/
+// --- End MongoDB Section ---
+
 
 // Multer file upload
 const upload = multer({
@@ -39,8 +45,17 @@ app.post("/upload", upload.single("file"), (req, res) => {
     return res.status(400).json({ error: "No file uploaded." });
   }
 
-  const filePath = path.resolve(__dirname, req.file.path);
-  const python = spawn("python3", ["run_model.py", filePath]);
+  // Ensure the 'uploads' directory exists
+  const uploadsDir = path.resolve(__dirname, 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir);
+  }
+
+  const filePath = path.resolve(uploadsDir, req.file.filename); // Use req.file.filename for the actual file name
+  // Multer already saves the file to req.file.path, which is in the 'uploads' directory.
+  // We just need to make sure the path is correct for python.spawn
+  const pythonScriptPath = path.resolve(__dirname, 'run_model.py');
+  const python = spawn("python3", [pythonScriptPath, filePath]);
 
   let outputData = "";
   let errorData = "";
@@ -49,7 +64,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
   python.stderr.on("data", (data) => (errorData += data.toString()));
 
   python.on("close", (code) => {
-    fs.unlink(filePath, (err) => {
+    fs.unlink(filePath, (err) => { // Use filePath to delete the file
       if (err) {
         console.error("Failed to delete uploaded file:", err);
       } else {
@@ -59,6 +74,8 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
     if (errorData) {
       console.error("Python error:", errorData);
+      // It's good practice to send the Python error back to the client for debugging
+      return res.status(500).json({ error: "Python script error", details: errorData });
     }
 
     try {
@@ -69,12 +86,13 @@ app.post("/upload", upload.single("file"), (req, res) => {
       res.json(result);
     } catch (err) {
       console.error("Failed to parse model output:", err);
-      res.status(500).json({ error: "Error parsing model output." });
+      res.status(500).json({ error: "Error parsing model output. Raw output: " + outputData.substring(0, Math.min(outputData.length, 500)) + "..." });
     }
   });
 });
 
-// Feedback route
+// --- Feedback route (Already commented out, keep it that way for free tier) ---
+/*
 app.post("/feedback", async (req, res) => {
   try {
     const feedback = new Feedback(req.body);
@@ -85,12 +103,14 @@ app.post("/feedback", async (req, res) => {
     res.status(500).json({ error: "Failed to save feedback." });
   }
 });
+*/
+// --- End Feedback Section ---
 
 // Test route
 app.get("/", (req, res) => {
   res.send("📄 PDF Summarizer backend is running.");
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on http://0.0.0.0:${PORT}`); // Log 0.0.0.0 for clarity in Docker
 });

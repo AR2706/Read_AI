@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # Frontend service (React app served by Nginx)
+  frontend-service:
+    build:
+      context: ./frontend # Build context is the frontend directory
+      dockerfile: Dockerfile # Dockerfile is inside frontend/
+    ports:
+      - "80:80" # Map container port 80 to host port 80 (Hugging Face exposes this)
+    environment:
+      # This REACT_APP_ variable is for your React app to know where its backend is
+      # The frontend will call /api which Nginx will proxy to backend-service:8000
+      - REACT_APP_BACKEND_BASE_URL=/api
+    depends_on:
+      - backend-service # Ensure backend starts before frontend
+
+  # Backend service (Node.js Express app with Python ML)
+  backend-service:
+    build:
+      context: ./backend # Build context is the backend directory
+      dockerfile: Dockerfile # Dockerfile is inside backend/
+    ports:
+      - "8000:8000" # Map container port 8000 to host port 8000
+    environment:
+      - PORT=8000 # Ensure Node.js app listens on this port
+      # Add your MongoDB URI here if you decide to use it with a paid tier/different setup later
+      # - MONGODB_URI=${MONGODB_URI} # This would require setting MONGODB_URI in Hugging Face Space secrets/env vars
+    # Hugging Face Spaces handles large files in Docker builds, so no need for explicit volumes for model2.pkl
