@@ -21,9 +21,9 @@ services:
       context: ./backend # Build context is the backend directory
       dockerfile: Dockerfile # Dockerfile is inside backend/
     ports:
-      - "8000:8000" # Map container port 8000 to host port 8000
+      - "7866:7866" # Map container port 8000 to host port 8000
     environment:
-      - PORT=8000 # Ensure Node.js app listens on this port
+      - PORT=7866 # Ensure Node.js app listens on this port
       # Add your MongoDB URI here if you decide to use it with a paid tier/different setup later
       # - MONGODB_URI=${MONGODB_URI} # This would require setting MONGODB_URI in Hugging Face Space secrets/env vars
     # Hugging Face Spaces handles large files in Docker builds, so no need for explicit volumes for model2.pkl
