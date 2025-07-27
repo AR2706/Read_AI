@@ -8,7 +8,7 @@ const cors = require("cors");
 // const mongoose = require("mongoose"); // Keep this line commented out for free tier deployment
 
 const app = express();
-const PORT = process.env.PORT || 8000; // Ensure this matches the exposed port in Dockerfile
+const PORT = process.env.PORT || 7866; // Ensure this matches the exposed port in Dockerfile
 
 app.use(express.json());
 app.use(cors());
